@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MBTI Quiz Gen Z Style</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9f4ff;
+      color: #333;
+      line-height: 1.6;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      color: #6a0dad;
+    }
+    .intro {
+      text-align: center;
+      font-size: 1.1em;
+      margin-bottom: 30px;
+      color: #555;
+    }
+    .question-container {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: none;
+    }
+    .question-container.active {
+      display: block;
+    }
+    .question-text {
+      font-size: 1.2em;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+    .options label {
+      display: block;
+      margin: 10px 0;
+      cursor: pointer;
+      padding: 12px 16px;
+      background: #f0e6ff;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+    .options label:hover {
+      background: #d9c7ff;
+    }
+    .navigation {
+      text-align: center;
+      margin-top: 20px;
+    }
+    button.nav-btn {
+      padding: 10px 20px;
+      margin: 0 10px;
+      background: #6a0dad;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    button.nav-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    button.nav-btn:hover:not(:disabled) {
+      background: #8a2be2;
+    }
+    .progress-container {
+      margin: 30px 0;
+      padding: 10px;
+      background: #eee;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 0.9em;
+      color: #666;
+    }
+    .progress-bar {
+      height: 10px;
+      background: #d9c7ff;
+      border-radius: 5px;
+      margin-top: 5px;
+      transition: width 0.3s ease;
+    }
+    #result {
+      margin-top: 30px;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: none;
+    }
+    .result-title {
+      font-size: 1.5em;
+      color: #6a0dad;
+      margin-bottom: 10px;
+    }
+    .vibes {
+      font-style: italic;
+      color: #8a2be2;
+    }
+    .strengths, .weaknesses, .bestie {
+      margin: 10px 0;
+    }
+    .bestie {
+      font-weight: bold;
+    }
+    #submit-btn {
+      display: block;
+      margin: 20px auto;
+      padding: 12px 24px;
+      background: #6a0dad;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1em;
+      cursor: pointer;
+    }
+    #submit-btn:hover {
+      background: #8a2be2;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>✨ MBTI Quiz Gen Z Style</h1>
+  <p class="intro">
+    Jawab satu per satu — pilih <strong>a</strong> atau <strong>b</strong>.<br>
+    Gak usah mikir lama, ikutin vibe aja! 💫
+  </p>
+
+  <div class="progress-container">
+    <div>Soal <span id="current">1</span> dari <span id="total">20</span></div>
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+
+  <div id="quiz">
+    <!-- Soal akan dimasukkan oleh JS -->
+  </div>
+
+  <div class="navigation">
+    <button id="back-btn" class="nav-btn" onclick="goBack()">◀️ Back</button>
+    <button id="next-btn" class="nav-btn" onclick="goNext()">Next ▶️</button>
+    <button id="submit-btn" onclick="calculateResult()" style="display:none;">Hitung Hasil 🔮</button>
+  </div>
+
+  <div id="result">
+    <div class="result-title" id="result-type"></div>
+    <p id="result-desc"></p>
+    <p><span class="vibes" id="result-vibes"></span></p>
+    <p class="strengths"><strong>💪 Strengths:</strong> <span id="result-strengths"></span></p>
+    <p class="weaknesses"><strong>⚠ Weaknesses:</strong> <span id="result-weaknesses"></span></p>
+    <p class="bestie"><strong>🤝 Bestie match:</strong> <span id="result-bestie"></span></p>
+  </div>
+
+  <script>
+    // Soal dan data tetap sama seperti sebelumnya
+    const questions = [
+      { text: "Weekend ideal kamu?", a: "Party kecil bareng circle", b: "Me time sambil scroll TikTok atau nonton series", trait: "EI" },
+      { text: "Lagi capek, kamu recharge dengan?", a: "Ngobrol, nongkrong santai", b: "Ngilang sebentar, off dulu", trait: "EI" },
+      { text: "First day di tempat baru, kamu?", a: "Langsung sapa orang, coba akrab", b: "Observasi dulu, baru pelan-pelan nyambung", trait: "EI" },
+      { text: "Lagi bete, kamu curhat ke?", a: "Siapa aja yang bisa denger", b: "Paling ke diary atau chat notes", trait: "EI" },
+      { text: "Kalau meeting Zoom rame, kamu?", a: "Angkat tangan, kasih opini", b: "Diam, nunggu ditanya", trait: "EI" },
+      { text: "Kalau dikasih tugas kreatif, kamu?", a: "Tanya dulu format, deadline, dll", b: "Langsung mikir konsep aneh tapi keren", trait: "SN" },
+      { text: "Baca caption panjang, kamu?", a: "Fokus ke fakta dan info real", b: "Tangkap vibes dan makna tersembunyi", trait: "SN" },
+      { text: "Waktu ambil keputusan, kamu?", a: "Berdasarkan pengalaman yang udah ada", b: "Feeling dan intuisi sih, kayaknya bakal works", trait: "SN" },
+      { text: "Kalau bikin goal, kamu?", a: "Step by step, realistis", b: "Vision besar dulu, nanti mikir jalan", trait: "SN" },
+      { text: "Liat trend baru, kamu?", a: "Cari tahu step-by-step cara ikutan", b: "Langsung modifikasi biar beda", trait: "SN" },
+      { text: "Ada temen minta saran, kamu?", a: "Kasih solusi logis", b: "Dengerin dulu, empati mode on", trait: "TF" },
+      { text: "Kalau dikritik, kamu?", a: "Ambil poin penting, gas perbaiki", b: "Kepikiran sih, tapi sambil mikir “kok gitu ya?”", trait: "TF" },
+      { text: "Lagi diskusi panas, kamu?", a: "Fokus ke argumen yang masuk akal", b: "Perhatiin juga perasaan orang", trait: "TF" },
+      { text: "Pilih partner kerja?", a: "Yang kerja cepet dan efisien", b: "Yang suportif dan satu frekuensi", trait: "TF" },
+      { text: "Kalau bikin keputusan besar?", a: "List pro-kontra", b: "Tanya hati kecil", trait: "TF" },
+      { text: "Cara kerja kamu lebih ke?", a: "Deadline rapi, checklist jalan", b: "Kerjain pas mood dateng", trait: "JP" },
+      { text: "Plan liburan, kamu?", a: "Itinerary fix dari awal", b: "Jalanin aja, liat nanti", trait: "JP" },
+      { text: "Tipe organize kamu?", a: "Folder rapi, note warna-warni", b: "Semua ada di kepala (kadang lupa, tapi hidup terus)", trait: "JP" },
+      { text: "Ada project penting, kamu?", a: "Mulai jauh hari biar aman", b: "Ngerjain last minute, tapi jadi juga kok", trait: "JP" },
+      { text: "Hidup ideal versi kamu?", a: "Teratur, jelas tujuannya", b: "Fleksibel, yang penting happy", trait: "JP" }
+    ];
+
+    const mbtiTypes = {
+      // [Data mbtiTypes tetap sama seperti sebelumnya, tidak berubah]
+      "ENFP": {
+        desc: "Kamu anaknya random tapi penuh ide gila yang bisa bikin semua orang happy. Hidup buat kamu itu eksplorasi dan koneksi. Kadang chaos, tapi selalu penuh warna.",
+        vibes: "😜🌟🔥 “YOLO, but make it deep”",
+        strengths: "Kreatif, spontan, peka",
+        weaknesses: "Kebanyakan ide, mood swing, overthinking",
+        bestie: "INFJ, ENTP"
+      },
+      "ENTP": {
+        desc: "Suka adu argumen tapi niatnya fun. Kamu visioner, suka tantangan, dan gampang bosan sama rutinitas.",
+        vibes: "🤯💬⚡ “Bikin ribut biar rame”",
+        strengths: "Cepat mikir, adaptif, inovatif",
+        weaknesses: "Suka PHP, gampang terdistraksi, impulsif",
+        bestie: "INFJ, ENFP"
+      },
+      "ESFP": {
+        desc: "Kamu magnet sosial yang bikin orang betah. Hidup kamu itu buat menikmati momen sekarang.",
+        vibes: "🪩🍹💃 “FOMO level dewa”",
+        strengths: "Ramah, energik, fun",
+        weaknesses: "Boros, susah fokus jangka panjang, drama dikit",
+        bestie: "ISFJ, ESTP"
+      },
+      "ESTP": {
+        desc: "Anti mager, langsung gerak kalau ada peluang. Hidup penuh tantangan dan aksi seru.",
+        vibes: "🏍💥🕶 “Gaspol dulu, mikir belakangan”",
+        strengths: "Berani, gesit, problem solver",
+        weaknesses: "Nekat, nggak sabaran, bosenan",
+        bestie: "ESFP, ISTP"
+      },
+      "ENFJ": {
+        desc: "Kamu inspiratif dan peduli banget sama orang lain. Tipe yang rela bantuin semua orang bahkan kalau lagi capek.",
+        vibes: "🌸📢💫 “Bestie semua orang”",
+        strengths: "Karismatik, suportif, visioner",
+        weaknesses: "Terlalu perfeksionis, sulit bilang ‘nggak’, overcommit",
+        bestie: "INFP, ENFP"
+      },
+      "ENTJ": {
+        desc: "Punya visi jelas dan nggak ragu ngejar target. Natural born leader yang tahu cara ngegas tim.",
+        vibes: "📊🗡💼 “Boss vibes”",
+        strengths: "Strategis, tegas, ambisius",
+        weaknesses: "Keras kepala, kurang sabar, workaholic",
+        bestie: "INTJ, ENTP"
+      },
+      "ESFJ": {
+        desc: "Kamu tipe yang bikin semua orang nyaman. Perhatian sama detail kecil yang bikin orang merasa dihargai.",
+        vibes: "🫂☕🍰 “Mama/papa vibes”",
+        strengths: "Sabar, suportif, setia",
+        weaknesses: "Susah nolak orang, terlalu mikirin omongan orang, gampang stres",
+        bestie: "ISFP, ESTJ"
+      },
+      "ESTJ": {
+        desc: "Kalau mau semua rapi dan jalan sesuai rencana, panggil kamu.",
+        vibes: "🗂📌🔨 “No drama, just action”",
+        strengths: "Disiplin, efisien, realistis",
+        weaknesses: "Kaku, kurang fleksibel, suka ngegas",
+        bestie: "ISTJ, ESFJ"
+      },
+      "INFP": {
+        desc: "Kamu idealis yang penuh imajinasi dan empati. Punya dunia sendiri yang kadang susah dijelaskan.",
+        vibes: "📖🌸🦋 “Main character energy”",
+        strengths: "Kreatif, penyayang, peka",
+        weaknesses: "Terlalu sensitif, kadang kurang tegas, gampang kecewa",
+        bestie: "ENFJ, ENFP"
+      },
+      "INFJ": {
+        desc: "Kamu deep thinker yang suka merencanakan masa depan. Jarang bicara, tapi sekali ngomong, dalem.",
+        vibes: "🌌📜🕊 “Mystery but friendly”",
+        strengths: "Insightful, setia, visioner",
+        weaknesses: "Perfeksionis, gampang overthinking, butuh waktu recharge lama",
+        bestie: "ENFP, ENTP"
+      },
+      "ISFP": {
+        desc: "Kamu estetik, chill, dan peka sama keindahan hidup. Hidup kamu seperti galeri seni.",
+        vibes: "📷🌿🕊 “Soft but spicy”",
+        strengths: "Kreatif, tenang, empati tinggi",
+        weaknesses: "Suka ngilang, mood swing, kadang nggak tegas",
+        bestie: "ESFJ, ISTP"
+      },
+      "ISTP": {
+        desc: "Praktis dan logis. Suka nyoba hal baru dan nggak takut eksperimen.",
+        vibes: "🔧🏹🕶 “Cool and mysterious”",
+        strengths: "Analitis, adaptif, tangguh",
+        weaknesses: "Dingin, susah dibaca, gampang bosen",
+        bestie: "ESTP, ISFP"
+      },
+      "INTJ": {
+        desc: "Punya rencana A sampai Z, semua udah dipikirin. Jarang ngomong, tapi sekali bergerak langsung tepat sasaran.",
+        vibes: "📚🖤♟ “Trust the plan”",
+        strengths: "Strategis, fokus, visioner",
+        weaknesses: "Kaku, susah terbuka, kurang sabar sama orang lambat",
+        bestie: "ENTJ, ENTP"
+      },
+      "INTP": {
+        desc: "Selalu mikirin teori baru dan suka nyari jawaban sendiri. Kadang kelewat tenggelam di pikiran.",
+        vibes: "🧩📡☕ “Wait, let me overthink”",
+        strengths: "Analitis, kreatif, open-minded",
+        weaknesses: "Kurang action, susah fokus ke satu hal, kadang socially awkward",
+        bestie: "ENTP, ENFP"
+      },
+      "ISFJ": {
+        desc: "Lembut tapi tangguh. Kamu tipe yang bakal ada buat orang terdekat no matter what.",
+        vibes: "🫖🌷📦 “Silent protector”",
+        strengths: "Loyal, detail-oriented, sabar",
+        weaknesses: "Susah nolak, gampang khawatir, kadang terlalu pasif",
+        bestie: "ESFP, ESTJ"
+      },
+      "ISTJ": {
+        desc: "Terstruktur dan bisa diandalkan. Kalau semua orang panik, kamu yang tetep waras.",
+        vibes: "📎📦📏 “Rules are my comfort zone”",
+        strengths: "Disiplin, konsisten, teliti",
+        weaknesses: "Kurang fleksibel, terlalu serius, suka nge-judge diam-diam",
+        bestie: "ESTJ, ISFJ"
+      }
+    };
+
+    // Variabel state
+    let currentQuestionIndex = 0;
+    const answers = {};
+
+    // Render semua soal
+    const quizContainer = document.getElementById("quiz");
+    questions.forEach((q, index) => {
+      const div = document.createElement("div");
+      div.className = "question-container" + (index === 0 ? " active" : "");
+      div.innerHTML = `
+        <div class="question-text">${index + 1}. ${q.text}</div>
+        <div class="options">
+          <label><input type="radio" name="q${index}" value="a"> ${q.a}</label>
+          <label><input type="radio" name="q${index}" value="b"> ${q.b}</label>
+        </div>
+      `;
+      quizContainer.appendChild(div);
+    });
+
+    // Update progress
+    function updateProgress() {
+      const progress = (currentQuestionIndex / questions.length) * 100;
+      document.getElementById("progress-bar").style.width = progress + "%";
+      document.getElementById("current").textContent = currentQuestionIndex + 1;
+      document.getElementById("total").textContent = questions.length;
+
+      // Tampilkan tombol submit di akhir
+      if (currentQuestionIndex === questions.length) {
+        document.getElementById("next-btn").style.display = "none";
+        document.getElementById("back-btn").style.display = "none";
+        document.getElementById("submit-btn").style.display = "block";
+      } else {
+        document.getElementById("next-btn").style.display = "inline-block";
+        document.getElementById("back-btn").style.display = "inline-block";
+        document.getElementById("submit-btn").style.display = "none";
+      }
+    }
+
+    // Pindah ke soal berikutnya
+    function goNext() {
+      const selected = document.querySelector(`input[name="q${currentQuestionIndex}"]:checked`);
+      if (!selected) {
+        alert("Pilih dulu jawabannya, deh!");
+        return;
+      }
+
+      answers[currentQuestionIndex] = selected.value;
+
+      currentQuestionIndex++;
+      showCurrentQuestion();
+      updateProgress();
+    }
+
+    // Kembali ke soal sebelumnya
+    function goBack() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        showCurrentQuestion();
+        updateProgress();
+      }
+    }
+
+    // Tampilkan soal aktif
+    function showCurrentQuestion() {
+      document.querySelectorAll(".question-container").forEach((el, i) => {
+        el.classList.toggle("active", i === currentQuestionIndex);
+      });
+    }
+
+    // Hitung hasil akhir
+    function calculateResult() {
+      let EI = 0, SN = 0, TF = 0, JP = 0;
+
+      questions.forEach((q, index) => {
+        const ans = answers[index];
+        if (q.trait === "EI") {
+          if (ans === "a") EI++;
+          else EI--;
+        }
+        if (q.trait === "SN") {
+          if (ans === "a") SN--;
+          else SN++;
+        }
+        if (q.trait === "TF") {
+          if (ans === "a") TF--;
+          else TF++;
+        }
+        if (q.trait === "JP") {
+          if (ans === "a") JP++;
+          else JP--;
+        }
+      });
+
+      const type = [
+        EI >= 0 ? "E" : "I",
+        SN >= 0 ? "N" : "S",
+        TF >= 0 ? "F" : "T",
+        JP >= 0 ? "J" : "P"
+      ].join("");
+
+      const result = mbtiTypes[type];
+      document.getElementById("result-type").textContent = `📍 ${type} – ${getFullTypeName(type)}`;
+      document.getElementById("result-desc").textContent = result.desc;
+      document.getElementById("result-vibes").textContent = result.vibes;
+      document.getElementById("result-strengths").textContent = result.strengths;
+      document.getElementById("result-weaknesses").textContent = result.weaknesses;
+      document.getElementById("result-bestie").textContent = result.bestie;
+      document.getElementById("result").style.display = "block";
+
+      // Scroll ke hasil
+      document.getElementById("result").scrollIntoView({ behavior: "smooth" });
+    }
+
+    // Fungsi nama lengkap tipe
+    function getFullTypeName(type) {
+      const names = {
+        "ENFP": "Si Free Spirit 🌈",
+        "ENTP": "Si Tukang Debat 🔥",
+        "ESFP": "Si Life of The Party 🎉",
+        "ESTP": "Si Action Taker 🚀",
+        "ENFJ": "Si Motivator 💖",
+        "ENTJ": "Si CEO Mode 🏆",
+        "ESFJ": "Si Caregiver 🍪",
+        "ESTJ": "Si Organizer 📅",
+        "INFP": "Si Dreamer 🌙",
+        "INFJ": "Si Visionary 🔮",
+        "ISFP": "Si Artist 🎨",
+        "ISTP": "Si Problem Solver 🛠",
+        "INTJ": "Si Mastermind ♟",
+        "INTP": "Si Scientist 🧠",
+        "ISFJ": "Si Guardian 🛡",
+        "ISTJ": "Si Planner 📋"
+      };
+      return names[type] || type;
+    }
+
+    // Inisialisasi
+    updateProgress();
+  </script>
+</body>
+</html>
